@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FCD Prompt Hub</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: white;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        radial-gradient(circle at 25px 25px, rgba(76, 175, 80, 0.1) 2%, transparent 0%),
+        radial-gradient(circle at 75px 75px, rgba(76, 175, 80, 0.1) 2%, transparent 0%);
+      background-size: 100px 100px;
+      z-index: 0;
+    }
+
+    h1 {
+      text-align: center;
+      margin: 40px auto;
+      font-size: 3.5em;
+      color: white;
+      width: 100%;
+      position: relative;
+      padding-bottom: 15px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(145deg, #ffffff, #e6e6e6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .category-section {
+      width: 100%;
+      max-width: 1200px;
+      margin-bottom: 40px;
+      position: relative;
+      z-index: 1;
+      scroll-margin-top: 100px;
+    }
+
+    .category-header {
+      color: #4CAF50;
+      font-size: 1.5em;
+      margin: 20px 0;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #4CAF50;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      position: relative;
+      display: inline-block;
+    }
+
+    .category-header::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 50px;
+      height: 2px;
+      background: #4CAF50;
+      transition: width 0.3s ease;
+    }
+
+    .category-header:hover::after {
+      width: 100%;
+    }
+
+    .bubble-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 30px;
+      justify-content: center;
+    }
+
+    .prompt-bubble {
+      background: linear-gradient(145deg, rgba(76, 175, 80, 0.1), rgba(0, 123, 255, 0.1));
+      border: 2px solid #4CAF50;
+      border-radius: 50%;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: white;
+      font-weight: bold;
+      font-size: 0.9em;
+      box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2);
+      width: var(--size);
+      height: var(--size);
+      position: relative;
+      overflow: hidden;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .prompt-bubble::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, rgba(76, 175, 80, 0.2) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .prompt-bubble:hover {
+      transform: scale(1.05) translateY(-5px);
+      box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
+      background: linear-gradient(145deg, rgba(76, 175, 80, 0.15), rgba(0, 123, 255, 0.15));
+      animation: none;
+    }
+
+    .prompt-bubble:hover::before {
+      opacity: 1;
+    }
+
+    .prompt-bubble.large {
+      --size: 180px;
+      font-size: 1.1em;
+    }
+
+    .prompt-bubble.medium {
+      --size: 150px;
+      font-size: 0.9em;
+    }
+
+    .prompt-bubble.small {
+      --size: 120px;
+      font-size: 0.8em;
+    }
+
+    .bubble-title {
+      position: relative;
+      z-index: 1;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    .success-message {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #4CAF50;
+      color: white;
+      padding: 15px 25px;
+      border-radius: 12px;
+      z-index: 1000;
+      box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+      display: none;
+    }
+
+    .success-message.show {
+      display: block;
+      animation: fadeInOut 2s ease-in-out;
+    }
+
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateY(-20px); }
+      20% { opacity: 1; transform: translateY(0); }
+      80% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-20px); }
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-5px);
+      }
+      100% {
+        transform: translateY(0px);
+      }
+    }
+
+    .search-container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 0 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .nav-container {
+      display: flex;
+      gap: 15px;
+      margin: 15px 0;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .nav-button {
+      padding: 10px 20px;
+      border-radius: 25px;
+      border: 1px solid rgba(76, 175, 80, 0.3);
+      background: rgba(76, 175, 80, 0.1);
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 1em;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-button:hover {
+      background: rgba(76, 175, 80, 0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2);
+    }
+
+    .nav-button.active {
+      background: #4CAF50;
+      border-color: #4CAF50;
+    }
+
+    .prompt-bubble.hidden {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .nav-container {
+        padding: 5px;
+        gap: 10px;
+      }
+
+      .nav-button {
+        padding: 8px 15px;
+        font-size: 0.9em;
+      }
+
+      .back-to-top {
+        bottom: 20px;
+        right: 20px;
+        width: 40px;
+        height: 40px;
+        font-size: 1.2em;
+      }
+    }
+
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
+
+    .toast {
+      background: #4CAF50;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      opacity: 0;
+      transform: translateX(20px);
+      transition: all 0.3s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .toast-icon {
+      font-size: 18px;
+    }
+
+    .back-to-top {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, rgba(76, 175, 80, 0.95), rgba(76, 175, 80, 0.85));
+      border: none;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5em;
+      box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+      transition: all 0.3s ease;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(20px);
+      z-index: 1000;
+    }
+
+    .back-to-top.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .back-to-top:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+    }
+  </style>
+</head>
+<body>
+  <h1>FCD Prompt Hub</h1>
+
+  <div class="nav-container">
+    <a href="#lesson-planning" class="nav-button">Lesson Planning</a>
+    <a href="#cultural" class="nav-button">Cultural & Community</a>
+    <a href="#assessment" class="nav-button">Assessment</a>
+    <a href="#teacher-dev" class="nav-button">Teacher Development</a>
+    <a href="#parent" class="nav-button">Parent & Communication</a>
+    <a href="#student" class="nav-button">Student Support</a>
+  </div>
+
+  <!-- Lesson Planning & Instruction -->
+  <section id="lesson-planning" class="category-section">
+    <h2 class="category-header">Lesson Planning & Instruction</h2>
+    <div class="bubble-container">
+      <div class="prompt-bubble large" data-prompt="Create a detailed ESL lesson plan for [grade level: 1-6 or Advanced English] on [specific topic] following the FCD lesson plan format.
+The lesson plan should include: - Clear learning objective (LO) - Lead-in activity with an appropriate Kagan structure - Presentation phase with key vocabulary and Concept Checking Questions (CCQs) - Practice activities with appropriate Kagan structure - Production activity with appropriate Kagan structure - Homework that reinforces the objective - Anticipated problems and solutions - Materials needed - Personal teaching aim - Cognitive level(s) from Bloom's Taxonomy
+Include 1-2 grade-appropriate CCQs for each vocabulary word that help students understand the meaning in context.
+My students have prior knowledge of [relevant background]. The class includes [special considerations: mixed nationalities, language levels, etc.].">
+        <span class="bubble-title">FCD Complete Lesson Plan</span>
+      </div>
+
+      <div class="prompt-bubble large" data-prompt="Help me differentiate my [grade level] ESL lesson on [topic] for three different English proficiency levels in the same classroom.
+For each proficiency level (beginner, intermediate, advanced): - Suggest modifications to the main learning activities - Provide appropriate language scaffolds - Recommend grouping strategies - Create leveled success criteria - Suggest extensions or simplifications - Describe how to manage the multi-level classroom effectively">
+        <span class="bubble-title">Differentiation Planner</span>
+      </div>
+
+      <div class="prompt-bubble large" data-prompt="Adapt this lesson on [topic] for ESL students at varying proficiency levels (beginner, intermediate, advanced).
+Original lesson summary: [describe lesson]
+For each proficiency level, provide: - Key vocabulary to pre-teach with simple definitions and visual suggestions - Modified instructions with appropriate simplification - Visual supports or graphic organizers to include - Language scaffolds (sentence frames, word banks, etc.) - Recommended grouping strategies - Assessment modifications while maintaining rigor - Primary language supports where applicable.
+The accommodations should help ESL students access the same content while developing their English skills.">
+        <span class="bubble-title">ELL Accommodations</span>
+      </div>
+
+      <div class="prompt-bubble medium" data-prompt="Rewrite this text about [topic] at three different English proficiency levels: 1. Beginner ESL (simplified vocabulary and sentence structure) 2. Intermediate ESL (controlled vocabulary with some complex sentences) 3. Advanced ESL (grade-level appropriate with language support)
+Original text: [paste text]
+For each version: - Maintain all key concepts and information - Adjust vocabulary complexity appropriately - Modify sentence structure and length - Add supportive context where needed for lower levels - Add deeper connections for higher levels - Keep a similar overall length
+Also suggest 2-3 comprehension questions appropriate for each level.">
+        <span class="bubble-title">Text Leveling</span>
+      </div>
+
+      <div class="prompt-bubble large" data-prompt="Design three tiered production activities for [topic] that accommodate different English proficiency levels within my [grade level] ESL classroom.
+The core production task is: [describe basic production activity]
+For each proficiency tier, provide: - Specific language targets (vocabulary and structures) - Required support materials (sentence frames, word banks, etc.) - Clear success criteria - An appropriate Kagan cooperative learning structure - Extension possibilities for early finishers
+All three tiers should focus on the same communicative goal but with appropriate scaffolding and challenge levels.">
+        <span class="bubble-title">Tiered Activities</span>
+      </div>
+
+      <div class="prompt-bubble medium" data-prompt="Create scaffolding resources for this complex text that I want to use with my [grade level] ESL students:
+[Paste text here]
+Please provide: - A vocabulary pre-teaching guide with definitions and examples - 3-5 pre-reading activities to build background knowledge - A graphic organizer to support comprehension - Chunking suggestions to break down difficult sections - Sentence frames for discussing the text - Visual support suggestions - Extension activities for advanced learners - Simplified alternative sections for beginning learners">
+        <span class="bubble-title">Scaffolding Generator</span>
+      </div>
+
+      <div class="prompt-bubble medium" data-prompt="Suggest strategic first language (L1) support techniques for my ESL classroom with students from these language backgrounds:
+[List major language groups in your class]
+For each language group, recommend: - Key instructional moments when L1 support would be most beneficial - Types of L1 resources to develop or source - Peer support strategies using shared L1 - Digital translation tools that work well for this language - Transition strategies to move from L1 understanding to English production - Cultural considerations related to language learning">
+        <span class="bubble-title">L1 Support Strategies</span>
+      </div>
+
+      <div class="prompt-bubble large" data-prompt="Create an engaging FCD lesson plan for teaching [specific grammar point] to [grade level] ESL students.
+The lesson should: - Introduce the grammar in a meaningful context or story - Follow the PPT format (Presentation, Practice, Production) - Include inductive discovery of the grammar rule where possible - Provide controlled practice activities with appropriate scaffolding - Include a communicative production task using an appropriate Kagan structure - Feature clear examples that demonstrate meaning, form, and pronunciation - Include common error correction strategies - Suggest a homework activity that reinforces the grammar point - Address anticipated difficulties for ESL learners with this grammar point">
+        <span class="bubble-title">Grammar Lesson</span>
+      </div>
+
+      <div class="prompt-bubble large" data-prompt="Design a reading lesson using the text [provide text or describe type of text] for [grade level] ESL students.
+The lesson should follow the FCD format and include: - Pre-reading activities to activate schema and pre-teach key vocabulary - During-reading tasks with appropriate scaffolding - Post-reading comprehension activities using varied question types - A language focus based on structures from the text - A production activity related to the text's theme - Appropriate Kagan structures for different phases - Differentiation suggestions for varied reading proficiency levels - Homework that extends engagement with the text - CCQs for checking understanding of key concepts">
+        <span class="bubble-title">Reading Lesson</span>
+      </div>
+
+      <div class="prompt-bubble medium" data-prompt="Create a listening-focused lesson plan for [grade level] ESL students using [audio material or topic].
+Following the FCD format, include: - Pre-listening activities to prepare students for the content - Clear listening tasks at different levels (gist, specific information, inference) - Post-listening activities that extend the topic - Key vocabulary with CCQs - A production activity that builds on the listening content - Appropriate Kagan structures for collaborative listening tasks - Suggestions for accommodating different listening proficiency levels - Homework that provides additional listening practice - Anticipated listening challenges and solutions">
+        <span class="bubble-title">Listening Lesson</span>
+      </div>
+
+      <div class="prompt-bubble large" data-prompt="Design a speaking-focused FCD lesson plan for [grade level] ESL students on [topic].
+The lesson should include: - A motivating lead-in that generates interest in the speaking topic - Key vocabulary and functional language necessary for the speaking task - Controlled speaking practice with appropriate scaffolding - A main production speaking activity using an effective Kagan structure - Clear instructions and models for speaking tasks - Strategies for encouraging participation from all proficiency levels - Error correction approaches for speaking - A speaking homework assignment or follow-up - Assessment criteria for the speaking production">
+        <span class="bubble-title">Speaking Lesson</span>
+      </div>
+
+      <div class="prompt-bubble medium" data-prompt="Design a lesson plan focused on teaching the language function of [requesting information/making comparisons/giving opinions/etc.] for [grade level] ESL students.
+The lesson should follow our FCD format with: - A clear functional language objective - Target phrases and expressions appropriate for the grade level - A meaningful context for practicing this language function - Scaffolded activities progressing from controlled to free practice - An appropriate Kagan structure for each phase - CCQs for checking understanding of the function - A production task that authentically applies the language function - Homework that extends practice of this function">
+        <span class="bubble-title">Language Functions</span>
+      </div>
+
+      <div class="prompt-bubble medium" data-prompt="Create a pronunciation-focused lesson for [grade level] ESL students targeting the sound(s)/feature(s): [specific sounds, stress patterns, intonation, etc.].
+The lesson should follow the FCD format and include: - Awareness-raising activities to identify the pronunciation feature - Clear models and physical descriptions of how to produce the sound - Controlled practice activities that isolate the feature - Contextualized practice in words, phrases, and sentences - Communicative activities that encourage use of the feature - Appropriate Kagan structures for practice - Self-monitoring strategies for students - Feedback techniques for pronunciation correction - Homework for continued practice">
+        <span class="bubble-title">Pronunciation Focus</span>
+      </div>
+
+      <div class="prompt-bubble large" data-prompt="Design a vocabulary-focused lesson for [grade level] ESL students learning words related to [topic/theme].
+Following the FCD format, include: - An engaging introduction to the lexical set - Multi-sensory presentation of the vocabulary - Form, meaning, and pronunciation focus - Memory strategies and mnemonics - Controlled practice activities - Communicative tasks that require use of the new vocabulary - An appropriate Kagan structure for collaborative practice - Ways to recycle and retrieve the vocabulary in future lessons - A vocabulary homework assignment - CCQs for checking understanding of each word">
+        <span class="bubble-title">Vocabulary Lesson</span>
+      </div>
+
+      <div class="prompt-bubble medium" data-prompt="Generate a structured reflection guide for ESL teachers to evaluate their recent lessons.
+The guide should prompt reflection on:
+- Language objective achievement
+- Effectiveness of scaffolding for different proficiency levels
+- Student engagement across language backgrounds
+- Successful and challenging moments
+- Cultural responsiveness
+- Balance of language domains (listening, speaking, reading, writing)
+- Implementation of Kagan structures
+- Effectiveness of assessment approaches
+- Next steps based on student performance
+- Personal teaching strengths and growth areas">
+        <span class="bubble-title">Lesson Reflection</span>
+      </div>
+
+      <div class="prompt-bubble large" data-prompt="Create an engaging end-of-term review lesson for [grade level] ESL students that reviews key language from our units on [list topics/themes covered].
+Following the FCD format, include:
+- A motivating lead-in that generates excitement about reviewing
+- 3-4 creative activities that recycle previously taught language
+- Appropriate Kagan structures for collaborative review
+- Ways to identify areas needing further reinforcement
+- Differentiation for various proficiency levels
+- A celebration component that recognizes progress
+- Student self-assessment opportunities
+- Next steps for continued language development">
+        <span class="bubble-title">Term Review Lesson</span>
+      </div>
+
+      <div class="prompt-bubble medium" data-prompt="Create 5-7 language-rich icebreaker activities for the first week of school with my new [grade level] ESL students.
+Each activity should:
+- Build community among diverse international students
+- Incorporate appropriate language practice
+- Be engaging and low-stress for new English learners
+- Help me learn about students' backgrounds and interests
+- Establish positive classroom culture
+- Incorporate appropriate Kagan structures when possible
+- Include language support for different proficiency levels
+- Take approximately [time] minutes">
+        <span class="bubble-title">First Week Icebreakers</span>
+      </div>
+
+      <div class="prompt-bubble large" data-prompt="Create a guide for appropriately incorporating AI tools (like ChatGPT, Claude, etc.) into ESL instruction for [grade level] students.
+Include:
+- Age-appropriate use cases for AI in language learning
+- Guided activities where students can use AI for language development
+- Teacher preparation requirements
+- Digital citizenship and appropriate use guidelines
+- Critical thinking scaffolds when using AI tools
+- Limitations and considerations for ESL learners
+- Assessment implications
+- Parent communication about AI use
+The guide should focus on using AI as a tool to enhance language learning while developing appropriate digital literacy.">
+        <span class="bubble-title">AI Learning Guide</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cultural & Community -->
+  <section id="cultural" class="category-section">
+    <h2 class="category-header">Cultural & Community</h2>
+    <div class="bubble-container">
+      <div class="prompt-bubble large" data-prompt="Create activities that connect our [topic] lesson to students' cultural backgrounds for my international ESL class.
+My class includes students from [list major nationalities/regions represented].
+Please provide:
+- A lead-in activity that activates prior knowledge from diverse cultural perspectives
+- Discussion questions that invite cultural comparisons
+- A production activity where students can share aspects of their culture related to the topic
+- Suggestions for incorporating culturally diverse materials/examples
+- An appropriate Kagan structure that encourages cross-cultural sharing
+- Sensitivity considerations for potentially challenging cultural differences">
+        <span class="bubble-title">Cultural Connections</span>
+      </div>
+
+      <div class="prompt-bubble large" data-prompt="Create a lesson plan focused on developing cross-cultural communication skills for my [grade level] international ESL students.
+The lesson should follow the FCD format and:
+- Address a specific cross-cultural communication aspect [specify: nonverbal communication, conversation styles, etc.]
+- Include activities that raise awareness of cultural differences
+- Provide language for discussing and navigating cultural differences
+- Use appropriate Kagan structures to promote cultural exchange
+- Include a production task that applies cross-cultural communication skills
+- Feature reflection questions about students' own cultural practices
+- Suggest homework that extends cultural exploration
+- Include sensitivity guidelines for facilitating these discussions">
+        <span class="bubble-title">Cross-Cultural Skills</span>
+      </div>
+
+      <div class="prompt-bubble large" data-prompt="Help me plan a cultural celebration event that highlights the diverse backgrounds of my ESL students.
+My class includes students from [list nationalities/regions].
+Please suggest:
+- An engaging theme that embraces multiple cultures
+- 5-7 different interactive stations or activities
+- Ways to involve students in sharing their cultural heritage
+- Language development opportunities within the celebration
+- Parent/family involvement suggestions
+- Logistical considerations and materials
+- Pre-event learning activities to prepare students
+- Post-event reflection and language activities">
+        <span class="bubble-title">Cultural Celebration</span>
+      </div>
+
+      <div class="prompt-bubble large" data-prompt="Create a cultural sensitivity guide for teaching ESL to students from these backgrounds:
+[List major cultural/national groups in your school]
+For each cultural group, provide:
+- Key cultural values that may impact classroom behavior
+- Learning style preferences often associated with this culture
+- Communication norms (direct vs. indirect, etc.)
+- Educational expectations based on home country schooling
+- Potential classroom management considerations
+- Topics that may be sensitive or taboo
+- Building rapport strategies that respect cultural norms
+- Effective praise and feedback approaches
+This guide should avoid stereotyping while providing helpful insights for new teachers.">
+        <span class="bubble-title">Cultural Sensitivity</span>
+      </div>
+
+      <div class="prompt-bubble large" data-prompt="Help me integrate cultural content from my students' backgrounds into our upcoming unit on [topic/theme].
+My class includes students from [list nationalities/regions].
+Please suggest:
+- Ways to incorporate culturally diverse examples in my presentations
+- Resources that represent different cultural perspectives
+- Discussion questions that invite cultural comparisons
+- Projects that allow students to connect learning to their cultural backgrounds
+- Vocabulary that might have interesting cultural variations
+- Guest speaker or community connection opportunities
+- Sensitivity considerations for potentially challenging topics
+- Assessment options that allow for cultural expression">
+        <span class="bubble-title">Cultural Integration</span>
+      </div>
+
+      <div class="prompt-bubble large" data-prompt="Help me plan language-rich activities for an International Day celebration that showcases our students' diverse cultures while developing their English skills.
+Please suggest:
+- A schedule framework for the event
+- Pre-event language preparation lessons
+- Student-led presentation structures with language scaffolding
+- Interactive cultural learning stations with language components
+- Parent/community involvement suggestions
+- Follow-up language activities to extend learning
+- Assessment opportunities that emerge from the event
+- Digital/physical documentation ideas">
+        <span class="bubble-title">International Day</span>
+      </div>
+
+      <div class="prompt-bubble large" data-prompt="Help me plan developmentally appropriate activities that recognize the holiday of [specific holiday] for my international ESL students while respecting diverse beliefs and backgrounds.
+My class includes students from [list major nationalities/regions].
+Please provide:
+- Background information to share with students (culturally accurate but neutral)
+- Language-building activities related to holiday traditions
+- Comparison opportunities to similar celebrations in students' home cultures
+- Appropriate art or music activities with language components
+- Books or stories that could be used (with scaffolding suggestions)
+- Sensitivity considerations and inclusive approaches
+- Parent communication recommendations">
+        <span class="bubble-title">Holiday Integration</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Assessment & Progress Monitoring -->
+  <section id="assessment" class="category-section">
+    <h2 class="category-header">Assessment & Progress Monitoring</h2>
+    <div class="bubble-container">
+      <div class="prompt-bubble large" data-prompt="Create a comprehensive assessment on [topic] for [grade level] ESL students.
+Include the following question types: - 5 multiple-choice questions (4 options each) with clear, simple language - 3 matching exercises connecting vocabulary to definitions/images - 3 short-answer questions requiring 1-3 sentences - 2 extended response questions with sentence frames for support - 1 application question using a [graph/chart/image/scenario]
+Questions should assess different cognitive levels according to Bloom's taxonomy: - 30% knowledge/recall - 40% comprehension/application - 30% analysis/evaluation
+Provide an answer key with: - Correct answers for objective questions - Sample acceptable responses for open-ended questions - Point values for each question - Total possible points
+Format the assessment with clear sections, visual support, and numbered questions.">
+        <span class="bubble-title">Assessment Creator</span>
+      </div>
+
+      <div class="prompt-bubble large" data-prompt="Create a detailed rubric for assessing [speaking/writing/reading/listening] proficiency for [grade level] ESL students.
+The rubric should include these dimensions: - [Dimension 1, e.g., 'Vocabulary Range'] - [Dimension 2, e.g., 'Grammatical Accuracy'] - [Dimension 3, e.g., 'Fluency/Coherence'] - [Dimension 4, e.g., 'Task Achievement']
+For each dimension: - Create 4 performance levels with descriptors - Ensure descriptors are specific and observable - Include examples of what performance looks like at each level - Align with age-appropriate expectations - Consider both language accuracy and communicative effectiveness
+Format the rubric in an easy-to-use table that can be shared with students.">
+        <span class="bubble-title">Rubric Creator</span>
+      </div>
+
+      <div class="prompt-bubble medium" data-prompt="Create 5 different quick formative assessment activities to check ESL students' understanding of [language point/vocabulary/skill] for [grade level] students.
+Each assessment should: - Take 5 minutes or less to implement - Engage all students simultaneously - Provide immediate feedback on student understanding - Be low-preparation or use common classroom materials - Be appropriate for students at different proficiency levels
+For each formative assessment, provide: - A creative name - Clear implementation instructions - What to look for in student responses - How to address common language errors or misconceptions - A quick intervention strategy for students who demonstrate confusion">
+        <span class="bubble-title">Quick Assessments</span>
+      </div>
+
+      <div class="prompt-bubble medium" data-prompt="Help me develop effective error correction strategies for these common errors I'm noticing in my [grade level] ESL students' [speaking/writing]:
+[List common errors]
+For each error type, suggest: - Whether to use immediate or delayed correction - Direct or indirect correction techniques - Student self-correction strategies - Peer correction activities - Mini-lesson frameworks to address the pattern - Practice activities that target the problematic area - Positive reinforcement approaches when the correct form is used - Ways to track improvement over time">
+        <span class="bubble-title">Error Strategies</span>
+      </div>
+
+      <div class="prompt-bubble large" data-prompt="Help me create a language portfolio assessment system for my [grade level] ESL students.
+The portfolio should assess: - Progress in key language skills (reading, writing, listening, speaking) - Vocabulary acquisition - Grammar development - Cultural understanding - Self-assessment and reflection
+Please provide: - Sample portfolio components and organization - 5-7 different types of work to include - Rubrics for evaluating portfolio contents - Self-assessment tools for students - Parent communication about the portfolio - Implementation timeline - Celebrating growth and achievement">
+        <span class="bubble-title">Portfolio System</span>
+      </div>
+
+      <div class="prompt-bubble medium" data-prompt="Create a speaking assessment for [grade level] ESL students that evaluates their ability to [specific speaking skills/functions].
+The assessment should include: - A warm-up section to ease student anxiety - 2-3 different speaking tasks with increasing complexity - Clear instructions and time allocations - Language support appropriate for different proficiency levels - A detailed scoring rubric with performance level descriptors - Administrator guidelines and prompts - Recommendations for providing feedback - Strategies for managing test anxiety - Suggestions for using results to inform instruction">
+        <span class="bubble-title">Speaking Test</span>
+      </div>
+
+      <div class="prompt-bubble large" data-prompt="Design a systematic approach for monitoring ESL student language development throughout the school year.
+The system should include:
+- Initial assessment tools and protocols
+- Ongoing formative assessment strategies
+- Periodic benchmark assessments
+- Observation frameworks for classroom performance
+- Student self-assessment tools
+- Documentation methods and templates
+- Data analysis processes for instructional decision-making
+- Progress communication tools for various stakeholders
+- Intervention triggers when progress stalls">
+        <span class="bubble-title">Progress Monitoring</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Teacher Development & Resources -->
+  <section id="teacher-dev" class="category-section">
+    <h2 class="category-header">Teacher Development & Resources</h2>
+    <div class="bubble-container">
+      <div class="prompt-bubble large" data-prompt="Help me create documentation to help onboard new ESL teachers to our program.
+Please include:
+- A clear explanation of our FCD lesson planning format and PPT structure
+- The rationale behind our methodological approach
+- Key principles of effective ESL instruction for international students
+- Integration of Kagan cooperative learning structures in ESL contexts
+- Assessment practices and benchmarks
+- Language level descriptors with examples
+- Program goals and objectives
+- New teacher onboarding essentials
+Format this as a concise, well-organized reference document for new teachers.">
+        <span class="bubble-title">New Teacher Guide</span>
+      </div>
+
+      <div class="prompt-bubble large" data-prompt="Help me create an organizational system for our ESL department resources.
+We need to organize:
+- Lesson plans by grade level and language focus
+- Assessment materials and records
+- Cultural resources and references
+- Visual aids and realia
+- Digital resources by skill area
+- Intervention materials for struggling learners
+- Advanced materials for accelerated learners
+- Professional development resources
+Please suggest:
+- A logical categorization system
+- Digital and physical organization strategies
+- Tagging/labeling conventions
+- Sharing protocols among teachers
+- Maintenance and updating procedures">
+        <span class="bubble-title">Resource System</span>
+      </div>
+
+      <div class="prompt-bubble large" data-prompt="Design a framework for ESL teacher collaboration at our international school.
+Please include:
+- Structured meeting formats for different purposes (planning, assessment, problem-solving)
+- Protocols for sharing effective practices
+- Lesson study or peer observation approaches
+- Collaborative planning templates
+- Methods for analyzing student work together
+- Digital collaboration tools and recommendations
+- Professional learning community structures
+- Cross-grade level articulation processes
+The framework should maximize limited collaboration time and focus on improving student outcomes.">
+        <span class="bubble-title">Teacher Collaboration</span>
+      </div>
+
+      <div class="prompt-bubble large" data-prompt="Design a 60-minute professional development session for content-area teachers on supporting ESL students in mainstream classrooms.
+The session should include:
+- An engaging opening activity (5 minutes)
+- Key principles of second language acquisition (10 minutes)
+- Practical strategies for scaffolding content (15 minutes)
+- Assessment modifications that maintain rigor (10 minutes)
+- Collaborative planning time with templates (15 minutes)
+- Resource sharing and next steps (5 minutes)
+Include presentation notes, handout suggestions, and follow-up activities.">
+        <span class="bubble-title">PD Session Plan</span>
+      </div>
+
+      <div class="prompt-bubble medium" data-prompt="Create a peer observation protocol specifically for ESL teachers to use when observing each other's classes.
+The protocol should focus on:
+- Implementation of the FCD lesson format
+- Effectiveness of language scaffolding
+- Student language production opportunities
+- Cultural responsiveness
+- Use of Kagan structures
+- Differentiation for various proficiency levels
+- Assessment techniques
+- Classroom discourse patterns
+Include pre-observation discussion questions, observation focus areas, and post-observation reflection prompts.">
+        <span class="bubble-title">Peer Observation</span>
+      </div>
+
+      <div class="prompt-bubble large" data-prompt="Create a comprehensive self-assessment tool for ESL teachers to evaluate their skills and identify professional growth areas.
+The assessment should address:
+- Understanding of second language acquisition principles
+- Effectiveness with the FCD lesson planning format
+- Implementation of the PPT approach
+- Skill in creating and using CCQs
+- Cultural responsiveness and inclusion
+- Assessment design and implementation
+- Differentiation for mixed proficiency levels
+- Integration of Kagan cooperative structures
+- Parent communication effectiveness
+- Professional collaboration
+- Use of technology in language teaching
+Include rating scales with clear descriptors and next-step suggestions.">
+        <span class="bubble-title">Self Assessment</span>
+      </div>
+
+      <div class="prompt-bubble large" data-prompt="Summarize current best practices from ESL research on [specific topic: vocabulary acquisition/grammar instruction/writing development/etc.] and provide practical classroom implementation strategies.
+Please include:
+- 3-5 key research findings in accessible language
+- The research basis for our FCD and PPT approach
+- Practical classroom applications for each finding
+- Examples of what this looks like in a [grade level] ESL classroom
+- Common implementation challenges and solutions
+- Ways to measure the impact on student learning
+- Resources for further learning">
+        <span class="bubble-title">Research to Practice</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Parent & Communication -->
+  <section id="parent" class="category-section">
+    <h2 class="category-header">Parent & Communication</h2>
+    <div class="bubble-container">
+      <div class="prompt-bubble medium" data-prompt="Create a ClassDojo post for parents about our recent lesson on [topic] for [grade level] ESL students.
+Include:
+- Today's date [current date]
+- The learning objective (LO) in parent-friendly language
+- The homework assignment with clear instructions
+- The spelling menu (SM) task (if applicable)
+- The vocabulary words we learned
+- Any important reminders
+- Information about upcoming quizzes or tests (if applicable)
+The post should be clear, concise, and avoid educational jargon while being informative about what students are learning.">
+        <span class="bubble-title">Daily Dojo Post</span>
+      </div>
+
+      <div class="prompt-bubble large" data-prompt="Create a comprehensive weekly ClassDojo update for parents of [grade level] ESL students.
+The update should include:
+- A summary of this week's learning objectives across subjects
+- Key vocabulary students learned this week
+- Progress celebrations and class achievements
+- Preview of next week's learning goals
+- Upcoming assessments or projects with dates
+- Suggestions for how parents can support language development at home
+- Reminders about important school events or requirements
+- A positive closing note
+Format this in clear, parent-friendly language that avoids educational jargon and is accessible to parents who may also be non-native English speakers.">
+        <span class="bubble-title">Weekly Dojo Update</span>
+      </div>
+
+      <div class="prompt-bubble large" data-prompt="Create a parent-teacher conference guide for [grade level] ESL students that considers language barriers.
+Include:
+- Key phrases to prepare in advance if translation will be needed
+- Visual supports to facilitate communication (progress charts, work samples, etc.)
+- Cultural considerations for different approaches to education
+- Clear structure for the conference with timing
+- Essential points to communicate about language development
+- Questions to understand home language use
+- Strategies when working with interpreters
+- Follow-up communication plan
+- Digital translation tool recommendations if needed">
+        <span class="bubble-title">Conference Guide</span>
+      </div>
+
+      <div class="prompt-bubble large" data-prompt="Create a guide for parents of my [grade level] ESL students on how they can support English learning at home, even if they don't speak English fluently themselves.
+The guide should include:
+- The importance of strong home language development
+- Simple activities that support language development in any language
+- Recommendations for dual-language materials
+- Digital resources with multiple language options
+- Ways to connect home culture to school learning
+- Realistic expectations for language development
+- Celebration of bilingualism/multilingualism
+- Community resource suggestions
+Format this in clear, accessible language that can be easily translated.">
+        <span class="bubble-title">Home Language Guide</span>
+      </div>
+
+      <div class="prompt-bubble medium" data-prompt="Create a language-focused supplement for my regular progress reports to help parents understand their child's English language development.
+For a [grade level] ESL student at the [beginner/intermediate/advanced] level, include:
+- Clear explanations of current English proficiency in each skill area
+- Concrete examples of what the student can do in English
+- Next developmental steps to expect
+- Celebration of recent language achievements
+- Explanation of normal second language acquisition processes
+- Suggestions for supporting continued progress
+- Comparison to typical development expectations
+- Growth mindset language about language learning
+The supplement should be informative while remaining positive and encouraging.">
+        <span class="bubble-title">Progress Report Guide</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Student Support -->
+  <section id="student" class="category-section">
+    <h2 class="category-header">Student Support</h2>
+    <div class="bubble-container">
+      <div class="prompt-bubble large" data-prompt="Create a comprehensive support plan for a new ESL student who has just arrived from [country] and speaks [language] with [beginning/no] English proficiency.
+The student will be in [grade level] and needs:
+- First-week inclusion strategies for teachers
+- Peer buddy system recommendations
+- Essential classroom language tools
+- Initial assessment approaches
+- Cultural adjustment support
+- Communication strategies with the student and family
+- Academic modifications for the first month
+- Progress monitoring tools
+- Social integration activities
+- Recommended resources and materials">
+        <span class="bubble-title">New Student Plan</span>
+      </div>
+    </div>
+  </section>
+
+  <button class="back-to-top" title="Back to Top">↑</button>
+  <div class="toast-container">
+    <div class="toast" id="toast">
+      <span class="toast-icon">✓</span>
+      <span>Prompt copied to clipboard</span>
+    </div>
+  </div>
+
+  <script>
+    // Navigation functionality
+    const navButtons = document.querySelectorAll('.nav-button');
+    const sections = document.querySelectorAll('.category-section');
+    const backToTop = document.querySelector('.back-to-top');
+    const toast = document.getElementById('toast');
+
+    function updateActiveNav() {
+      const scrollPosition = window.scrollY + 100;
+      
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        const sectionHeight = section.offsetHeight;
+        const sectionId = section.getAttribute('id');
+        
+        if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+          navButtons.forEach(button => {
+            button.classList.remove('active');
+            if (button.getAttribute('href') === `#${sectionId}`) {
+              button.classList.add('active');
+            }
+          });
+        }
+      });
+
+      // Show/hide back to top button
+      if (window.scrollY > 500) {
+        backToTop.classList.add('show');
+      } else {
+        backToTop.classList.remove('show');
+      }
+    }
+
+    // Update active nav on scroll
+    window.addEventListener('scroll', updateActiveNav);
+    
+    // Smooth scroll for navigation
+    navButtons.forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetId = button.getAttribute('href');
+        const targetSection = document.querySelector(targetId);
+        
+        if (targetSection) {
+          targetSection.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+
+    // Back to top functionality
+    backToTop.addEventListener('click', () => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
+
+    // Initialize active nav
+    updateActiveNav();
+
+    // Prompt bubble click handlers
+    document.querySelectorAll('.prompt-bubble').forEach(bubble => {
+      bubble.addEventListener('click', function() {
+        const promptText = this.getAttribute('data-prompt');
+        copyToClipboard(promptText);
+      });
+    });
+
+    function showToast() {
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2000);
+    }
+
+    function copyToClipboard(text) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      
+      try {
+        document.execCommand('copy');
+        showToast();
+      } catch (err) {
+        console.error('Failed to copy text: ', err);
+      }
+      
+      document.body.removeChild(textarea);
+    }
+  </script>
+</body>
+</html>
